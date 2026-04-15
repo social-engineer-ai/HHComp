@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hh-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hhcomp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hhcomp_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-hhcomp}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hhcomp}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hh-net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hh-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hhcomp}:${POSTGRES_PASSWORD:-hhcomp_dev_password}@postgres:5432/${POSTGRES_DB:-hhcomp}?schema=public
+      NODE_ENV: production
+    networks:
+      - hh-net
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: hh-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - hh-net
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  hh-net:
+    driver: bridge
