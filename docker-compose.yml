@@ -34,6 +34,24 @@ services:
     networks:
       - hh-net
 
+  grader:
+    build:
+      context: ./grader
+      dockerfile: Dockerfile
+    container_name: hh-grader
+    restart: unless-stopped
+    environment:
+      GRADER_SHARED_SECRET: ${GRADER_SHARED_SECRET}
+      S3_BUCKET: ${S3_BUCKET}
+      AWS_REGION: ${AWS_REGION}
+      AWS_DEFAULT_REGION: ${AWS_REGION}
+      GRADE_TIMEOUT: "60"
+      GRADE_MEMORY_MB: "512"
+    mem_limit: 1g
+    cpus: 1.0
+    networks:
+      - hh-net
+
   caddy:
     image: caddy:2-alpine
     container_name: hh-caddy
