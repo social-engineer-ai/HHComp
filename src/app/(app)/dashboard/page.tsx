@@ -1,18 +1,30 @@
 import Link from "next/link";
 import { requireUser, getTeamForUser } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
+import { getNDAStatusForUser } from "@/lib/nda";
 import { DashboardClient } from "./DashboardClient";
 import { logoutAction } from "../logout/actions";
+
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const user = await requireUser();
   const team = await getTeamForUser(user.id);
 
-  const pendingInvitation = team
-    ? await prisma.invitation.findFirst({
-        where: { teamId: team.id, status: "PENDING" },
-      })
-    : null;
+  const [pendingInvitation, ndaStatus, settings] = await Promise.all([
+    team
+      ? prisma.invitation.findFirst({
+          where: { teamId: team.id, status: "PENDING" },
+        })
+      : Promise.resolve(null),
+    getNDAStatusForUser(user.id, team?.id),
+    prisma.competitionSettings.findUnique({ where: { id: 1 } }),
+  ]);
+
+  const dataDownloadsEnabled = settings?.dataDownloadsEnabled ?? false;
+  const anyActiveDataFiles = await prisma.dataFile.count({
+    where: { fileType: "DATASET", isActive: true },
+  });
 
   return (
     <div className="min-h-screen">
@@ -77,6 +89,13 @@ export default async function DashboardPage() {
                 }
               : null
           }
+          nda={{
+            available: !!ndaStatus.activeFile,
+            currentUserSigned: ndaStatus.currentUserSigned,
+            teamSignedCount: ndaStatus.teamSignedCount,
+            teamTotalCount: ndaStatus.teamTotalCount,
+          }}
+          dataDownloadEnabled={dataDownloadsEnabled && ndaStatus.teamSignedAll && anyActiveDataFiles > 0}
         />
       </main>
     </div>

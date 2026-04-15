@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { FormError, FormNotice } from "@/components/FormError";
 import {
@@ -16,14 +17,25 @@ type Team = {
   members: Member[];
 };
 
+type NDAInfo = {
+  available: boolean;
+  currentUserSigned: boolean;
+  teamSignedCount: number;
+  teamTotalCount: number;
+};
+
 export function DashboardClient({
   user,
   team,
   pendingInvitation,
+  nda,
+  dataDownloadEnabled,
 }: {
   user: { id: string; name: string; email: string };
   team: Team | null;
   pendingInvitation: { code: string; inviteeEmail: string; expiresAt: string } | null;
+  nda: NDAInfo;
+  dataDownloadEnabled: boolean;
 }) {
   const [state, formAction, pending] = useActionState<InviteState, FormData>(
     sendInvitationAction,
@@ -32,6 +44,7 @@ export function DashboardClient({
 
   const isLead = team?.leadUserId === user.id;
   const isComplete = team?.members.length === 2;
+  const ndaComplete = nda.teamSignedCount === nda.teamTotalCount && nda.teamTotalCount > 0;
 
   return (
     <div className="space-y-6">
@@ -118,6 +131,78 @@ export function DashboardClient({
         )}
       </section>
 
+      {/* NDA card */}
+      <section className="rounded-lg border border-neutral-200 p-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-neutral-500">NDA</p>
+            <h2 className="text-xl font-semibold mt-1">Non-Disclosure Agreement</h2>
+          </div>
+          <span
+            className={`text-xs font-medium px-2 py-1 rounded-full ${
+              ndaComplete
+                ? "bg-green-100 text-green-800"
+                : nda.available
+                ? "bg-amber-100 text-amber-800"
+                : "bg-neutral-100 text-neutral-600"
+            }`}
+          >
+            {!nda.available
+              ? "NOT YET AVAILABLE"
+              : ndaComplete
+              ? "COMPLETE"
+              : `${nda.teamSignedCount} of ${nda.teamTotalCount} signed`}
+          </span>
+        </div>
+        <p className="mt-3 text-sm text-neutral-600">
+          {!nda.available
+            ? "The NDA will be available at kickoff on April 20."
+            : nda.currentUserSigned
+            ? "You have signed the NDA. Both team members must sign before you can access data."
+            : "Review and sign the NDA to unlock the data download."}
+        </p>
+        {nda.available && !nda.currentUserSigned && (
+          <Link
+            href="/nda"
+            className="mt-4 inline-block rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800"
+          >
+            Review and sign NDA
+          </Link>
+        )}
+      </section>
+
+      {/* Data download card */}
+      <section className="rounded-lg border border-neutral-200 p-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-neutral-500">Data</p>
+            <h2 className="text-xl font-semibold mt-1">Competition data package</h2>
+          </div>
+          <span
+            className={`text-xs font-medium px-2 py-1 rounded-full ${
+              dataDownloadEnabled
+                ? "bg-green-100 text-green-800"
+                : "bg-neutral-100 text-neutral-600"
+            }`}
+          >
+            {dataDownloadEnabled ? "AVAILABLE" : "LOCKED"}
+          </span>
+        </div>
+        <p className="mt-3 text-sm text-neutral-600">
+          {dataDownloadEnabled
+            ? "Download the dataset, prediction template, and related files."
+            : "Data download unlocks after both team members have signed the NDA and the organizers enable distribution (April 20)."}
+        </p>
+        {dataDownloadEnabled && (
+          <Link
+            href="/data"
+            className="mt-4 inline-block rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800"
+          >
+            Go to data downloads
+          </Link>
+        )}
+      </section>
+
       {/* Next steps */}
       <section className="rounded-lg border border-neutral-200 p-6">
         <h2 className="text-lg font-semibold">Next steps</h2>
@@ -125,10 +210,12 @@ export function DashboardClient({
           <li className={isComplete ? "text-neutral-400 line-through" : ""}>
             1. Complete your team (invite your teammate)
           </li>
-          <li className="text-neutral-500">
-            2. Both members sign the NDA (available April 20)
+          <li className={ndaComplete ? "text-neutral-400 line-through" : "text-neutral-500"}>
+            2. Both members sign the NDA
           </li>
-          <li className="text-neutral-500">3. Download the data package</li>
+          <li className={dataDownloadEnabled ? "text-neutral-500" : "text-neutral-400"}>
+            3. Download the data package
+          </li>
           <li className="text-neutral-500">4. Submit your four deliverables by May 1</li>
         </ol>
       </section>
