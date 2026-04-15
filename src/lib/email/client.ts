@@ -87,40 +87,42 @@ function getGmailClient() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const refreshToken = process.env.GMAIL_REFRESH_TOKEN;
-  if (!clientId || !clientSecret || !refreshToken) {
-    throw new Error(
-      "Gmail not configured. Missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GMAIL_REFRESH_TOKEN."
-    );
-  }
+  if (!clientId || !clientSecret || !refreshToken) return null;
   const oauth2 = new google.auth.OAuth2(clientId, clientSecret);
   oauth2.setCredentials({ refresh_token: refreshToken });
   cachedGmail = google.gmail({ version: "v1", auth: oauth2 });
   return cachedGmail;
 }
 
+function logEmailToConsole(input: SendEmailInput, reason: string) {
+  console.warn(`[email] ${reason}`);
+  console.log("======= EMAIL (not sent — recoverable below) =======");
+  console.log(`To:      ${toArray(input.to).join(", ")}`);
+  console.log(`Subject: ${input.subject}`);
+  console.log(`Body:`);
+  console.log(input.text ?? stripTags(input.html));
+  console.log("====================================================");
+}
+
+/**
+ * Send email. NEVER throws — failures are logged to stdout so verification codes
+ * and other critical content are recoverable from `docker compose logs app` while
+ * Gmail is unconfigured. The flow that called us continues regardless.
+ */
 export async function sendEmail(input: SendEmailInput): Promise<void> {
-  const raw = buildRawMessage(input);
-  const encoded = base64url(raw);
+  const gmail = getGmailClient();
+  if (!gmail) {
+    logEmailToConsole(input, "Gmail not configured (GMAIL_REFRESH_TOKEN missing)");
+    return;
+  }
   try {
-    const gmail = getGmailClient();
+    const raw = buildRawMessage(input);
+    const encoded = base64url(raw);
     await gmail.users.messages.send({
       userId: "me",
       requestBody: { raw: encoded },
     });
   } catch (e) {
-    // In dev, log but don't crash the flow if Gmail isn't configured yet
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(
-        "[email] send failed (dev mode, continuing):",
-        (e as Error).message
-      );
-      console.log("--- email preview ---");
-      console.log(`To: ${toArray(input.to).join(", ")}`);
-      console.log(`Subject: ${input.subject}`);
-      console.log(`Body:\n${input.text ?? stripTags(input.html)}`);
-      console.log("---------------------");
-      return;
-    }
-    throw e;
+    logEmailToConsole(input, `Gmail send failed: ${(e as Error).message}`);
   }
 }
