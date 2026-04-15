@@ -13,7 +13,7 @@ echo "==> Deploying to $HOST"
 if ! command -v rsync >/dev/null 2>&1; then
   echo "rsync not found; falling back to scp"
   TMP_TAR=$(mktemp --suffix=.tar.gz)
-  tar --exclude=node_modules --exclude=.next --exclude=.git --exclude=.secrets -czf "$TMP_TAR" .
+  tar --exclude=node_modules --exclude=.next --exclude=.git --exclude=.secrets --exclude=.env --exclude=.env.* --exclude=tsconfig.tsbuildinfo -czf "$TMP_TAR" .
   scp -i "$KEY" -o StrictHostKeyChecking=no "$TMP_TAR" "ubuntu@$HOST:/tmp/hh-comp.tar.gz"
   ssh -i "$KEY" -o StrictHostKeyChecking=no "ubuntu@$HOST" "
     set -e
@@ -25,7 +25,7 @@ if ! command -v rsync >/dev/null 2>&1; then
   rm -f "$TMP_TAR"
 else
   rsync -avz --delete \
-    --exclude=node_modules --exclude=.next --exclude=.git --exclude=.secrets --exclude=pgdata \
+    --exclude=node_modules --exclude=.next --exclude=.git --exclude=.secrets --exclude=pgdata --exclude=.env --exclude=.env.* --exclude=tsconfig.tsbuildinfo \
     -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
     ./ "ubuntu@$HOST:$REMOTE_DIR/"
 fi
