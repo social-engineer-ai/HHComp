@@ -1,0 +1,513 @@
+// ============================================
+// Horizon Hobby Case Competition Platform
+// Prisma schema — single source of truth
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Enums
+// ============================================
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  STUDENT
+}
+
+enum TeamStatus {
+  INCOMPLETE
+  COMPLETE
+  INACTIVE
+}
+
+enum MembershipRole {
+  LEAD
+  MEMBER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum VerificationCodePurpose {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
+enum DataFileType {
+  DATASET
+  PREDICTION_TEMPLATE
+  NDA
+  ANSWER_KEY
+  GRADING_SCRIPT
+  BROADCAST_ATTACHMENT
+  FINALIST_PRESENTATION
+  COMPETITION_BRIEF
+}
+
+enum SubmissionComponent {
+  PREDICTION
+  CODE
+  METHODOLOGY
+  PRESENTATION
+}
+
+enum SubmissionValidationStatus {
+  PENDING
+  VALID
+  INVALID_FORMAT
+  INVALID_STRUCTURE
+}
+
+enum GradingJobStatus {
+  QUEUED
+  RUNNING
+  SUCCESS
+  ERROR
+}
+
+enum BroadcastRecipientScope {
+  ALL_REGISTERED
+  ALL_COMPLETE
+  FINALISTS
+  CUSTOM
+}
+
+enum ReminderType {
+  H48
+  H6
+  H1
+}
+
+enum LeaderboardVisibility {
+  VISIBLE
+  FROZEN
+  HIDDEN
+}
+
+// ============================================
+// Core identity
+// ============================================
+
+model User {
+  id                String     @id @default(cuid())
+  name              String
+  email             String     @unique
+  emailLower        String     @unique // enforces case-insensitive uniqueness
+  passwordHash      String
+  role              UserRole   @default(STUDENT)
+  emailVerifiedAt   DateTime?
+  isActive          Boolean    @default(true)
+  lastLoginAt       DateTime?
+  failedLoginCount  Int        @default(0)
+  lockoutUntil      DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  teamMembership    TeamMembership?
+  ledTeam           Team?              @relation("TeamLead")
+  verificationCodes VerificationCode[]
+  sessions          Session[]
+  ndaSignatures     NDASignature[]
+  uploadedFiles     DataFile[]         @relation("UploadedBy")
+  submissionsUploaded Submission[]
+  announcementsAuthored Announcement[]
+  broadcastsAuthored BroadcastMessage[]
+  auditLogs         AuditLog[]
+  dataDownloads     DataDownloadLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  userId     String
+  expiresAt  DateTime
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model VerificationCode {
+  id          String                   @id @default(cuid())
+  userId      String
+  codeHash    String // sha256 of the 6-digit code
+  purpose     VerificationCodePurpose
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  attempts    Int                      @default(0)
+  createdAt   DateTime                 @default(now())
+
+  user        User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@index([expiresAt])
+}
+
+// ============================================
+// Teams
+// ============================================
+
+model Team {
+  id                  String   @id @default(cuid())
+  name                String   @unique
+  nameLower           String   @unique
+  leadUserId          String   @unique
+  status              TeamStatus @default(INCOMPLETE)
+  isFinalist          Boolean  @default(false)
+  finalistNotifiedAt  DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  lead                User     @relation("TeamLead", fields: [leadUserId], references: [id])
+  members             TeamMembership[]
+  invitations         Invitation[]
+  submissions         Submission[]
+  score               Score?
+  finalistPresentation FinalistPresentation?
+  broadcastRecipients BroadcastRecipient[]
+  remindersSent       ReminderSent[]
+
+  @@index([status])
+  @@index([isFinalist])
+}
+
+model TeamMembership {
+  id         String         @id @default(cuid())
+  teamId     String
+  userId     String         @unique // enforces one-team-per-student
+  role       MembershipRole
+  joinedAt   DateTime       @default(now())
+
+  team       Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+}
+
+model Invitation {
+  id            String           @id @default(cuid())
+  teamId        String
+  inviteeEmail  String
+  code          String           @unique
+  status        InvitationStatus @default(PENDING)
+  createdAt     DateTime         @default(now())
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+
+  team          Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([inviteeEmail])
+  @@index([teamId, status])
+}
+
+// ============================================
+// NDA
+// ============================================
+
+model NDASignature {
+  id                String   @id @default(cuid())
+  userId            String
+  ndaDataFileId     String
+  ndaDocumentHash   String   // sha256 of the NDA PDF bytes at signing time
+  typedName         String
+  ipAddress         String
+  userAgent         String?
+  signedAt          DateTime @default(now())
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ndaDataFile       DataFile @relation(fields: [ndaDataFileId], references: [id])
+
+  @@index([userId])
+  @@index([ndaDocumentHash])
+}
+
+// ============================================
+// Files
+// ============================================
+
+model DataFile {
+  id               String       @id @default(cuid())
+  filename         String
+  description      String?
+  s3Key            String       @unique
+  fileSize         Int
+  sha256           String
+  mimeType         String
+  fileType         DataFileType
+  uploadedById     String
+  uploadedAt       DateTime     @default(now())
+  isActive         Boolean      @default(true)
+  displayOrder     Int          @default(0)
+
+  uploadedBy       User         @relation("UploadedBy", fields: [uploadedById], references: [id])
+  ndaSignatures    NDASignature[]
+  downloads        DataDownloadLog[]
+
+  @@index([fileType, isActive])
+  @@index([sha256])
+}
+
+model DataDownloadLog {
+  id           String   @id @default(cuid())
+  userId       String
+  dataFileId   String
+  ipAddress    String?
+  downloadedAt DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dataFile     DataFile @relation(fields: [dataFileId], references: [id], onDelete: Cascade)
+
+  @@index([userId, downloadedAt])
+  @@index([dataFileId])
+}
+
+// ============================================
+// Submissions
+// ============================================
+
+model Submission {
+  id                String                      @id @default(cuid())
+  teamId            String
+  componentType     SubmissionComponent
+  s3Key             String                      @unique
+  originalFilename  String
+  fileSize          Int
+  sha256            String
+  mimeType          String
+  uploadedById      String
+  uploadedAt        DateTime                    @default(now())
+  version           Int                         @default(1)
+  isLatest          Boolean                     @default(true)
+  isLate            Boolean                     @default(false)
+  validationStatus  SubmissionValidationStatus  @default(PENDING)
+  validationMessage String?
+
+  team              Team                        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  uploadedBy        User                        @relation(fields: [uploadedById], references: [id])
+  gradingJobs       GradingJob[]
+  scoreFor          Score?                      @relation("ScoreSubmission")
+
+  @@index([teamId, componentType])
+  @@index([teamId, componentType, isLatest])
+  @@index([isLate])
+}
+
+model GradingJob {
+  id             String           @id @default(cuid())
+  submissionId   String
+  status         GradingJobStatus @default(QUEUED)
+  scriptVersionHash String?
+  answerKeyHash  String?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  stdout         String?
+  stderr         String?
+  exitCode       Int?
+  errorMessage   String?
+  attempts       Int              @default(0)
+  createdAt      DateTime         @default(now())
+
+  submission     Submission       @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  score          Score?
+
+  @@index([status, createdAt])
+  @@index([submissionId])
+}
+
+model Score {
+  id                 String   @id @default(cuid())
+  teamId             String   @unique
+  submissionId       String   @unique
+  gradingJobId       String?  @unique
+  scoreValue         Float    // weighted MAPE
+  scoredAt           DateTime @default(now())
+  scriptVersionHash  String?
+  isManualOverride   Boolean  @default(false)
+  overrideReason     String?
+  overriddenById     String?
+
+  team               Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  submission         Submission @relation("ScoreSubmission", fields: [submissionId], references: [id])
+  gradingJob         GradingJob? @relation(fields: [gradingJobId], references: [id])
+
+  @@index([scoreValue])
+}
+
+model FinalistPresentation {
+  id               String   @id @default(cuid())
+  teamId           String   @unique
+  s3Key            String   @unique
+  originalFilename String
+  fileSize         Int
+  uploadedAt       DateTime @default(now())
+  version          Int      @default(1)
+
+  team             Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// Content
+// ============================================
+
+model Announcement {
+  id                 String   @id @default(cuid())
+  title              String
+  body               String   // markdown
+  authorId           String
+  sentEmailBlast     Boolean  @default(false)
+  fromBroadcastId    String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  author             User     @relation(fields: [authorId], references: [id])
+  fromBroadcast      BroadcastMessage? @relation(fields: [fromBroadcastId], references: [id])
+
+  @@index([createdAt])
+}
+
+model FAQItem {
+  id           String   @id @default(cuid())
+  question     String
+  answer       String   // markdown
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([displayOrder])
+}
+
+model TimelineMilestone {
+  id           String   @id @default(cuid())
+  label        String
+  dateIso      DateTime
+  description  String?
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([displayOrder])
+}
+
+// ============================================
+// Broadcast messaging
+// ============================================
+
+model BroadcastMessage {
+  id              String                  @id @default(cuid())
+  subject         String
+  body            String                  // markdown
+  authorId        String
+  recipientScope  BroadcastRecipientScope
+  createdAt       DateTime                @default(now())
+  sentAt          DateTime?
+  successCount    Int                     @default(0)
+  failureCount    Int                     @default(0)
+
+  author          User                    @relation(fields: [authorId], references: [id])
+  attachments     BroadcastAttachment[]
+  recipients      BroadcastRecipient[]
+  announcements   Announcement[]
+
+  @@index([createdAt])
+}
+
+model BroadcastAttachment {
+  id                String           @id @default(cuid())
+  broadcastId       String
+  filename          String
+  s3Key             String
+  fileSize          Int
+  mimeType          String
+  createdAt         DateTime         @default(now())
+
+  broadcast         BroadcastMessage @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+}
+
+model BroadcastRecipient {
+  id            String           @id @default(cuid())
+  broadcastId   String
+  teamId        String
+  deliveredAt   DateTime?
+  errorMessage  String?
+  createdAt     DateTime         @default(now())
+
+  broadcast     BroadcastMessage @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  team          Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([broadcastId, teamId])
+}
+
+// ============================================
+// Competition settings (single-row)
+// ============================================
+
+model CompetitionSettings {
+  id                    Int                   @id @default(1)
+  submissionDeadline    DateTime
+  gracePeriodEnd        DateTime
+  registrationClose     DateTime
+  leaderboardFreezeAt   DateTime?
+  leaderboardVisibility LeaderboardVisibility @default(VISIBLE)
+  leaderboardTopN       Int?
+  dataDownloadsEnabled  Boolean               @default(false)
+  activeNdaFileId       String?
+  activeGradingScriptId String?
+  activeAnswerKeyId     String?
+  activePredictionTemplateId String?
+  updatedAt             DateTime              @updatedAt
+}
+
+// ============================================
+// Reminders (idempotency for deadline cron)
+// ============================================
+
+model ReminderSent {
+  id            String       @id @default(cuid())
+  teamId        String
+  reminderType  ReminderType
+  sentAt        DateTime     @default(now())
+
+  team          Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, reminderType])
+}
+
+// ============================================
+// Audit log
+// ============================================
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  action       String
+  entityType   String?
+  entityId     String?
+  details      Json?
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
