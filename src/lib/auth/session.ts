@@ -31,8 +31,9 @@ export async function createSession(
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    expires: expiresAt,
+    maxAge: Math.floor(SESSION_TTL_MS / 1000),
   });
+  console.log(`[session] created ${id.slice(0, 8)}… for user ${userId.slice(0, 8)}…`);
   return id;
 }
 
@@ -50,18 +51,26 @@ export type SessionUser = Omit<User, "passwordHash">;
 export async function getCurrentUser(): Promise<SessionUser | null> {
   const store = await cookies();
   const id = store.get(COOKIE_NAME)?.value;
-  if (!id) return null;
+  const allCookieNames = store.getAll().map((c) => c.name).join(",");
+  if (!id) {
+    console.log(`[session] NO cookie on request. Cookies seen: [${allCookieNames}]`);
+    return null;
+  }
   const session = await prisma.session.findUnique({
     where: { id },
     include: { user: true },
   });
-  if (!session) return null;
+  if (!session) {
+    console.log(`[session] cookie ${id.slice(0, 8)}… but no DB row`);
+    return null;
+  }
   if (session.expiresAt < new Date()) {
+    console.log(`[session] ${id.slice(0, 8)}… expired`);
     await prisma.session.delete({ where: { id } }).catch(() => {});
     return null;
   }
   if (!session.user.isActive) return null;
-  // Strip password hash
+  console.log(`[session] OK ${id.slice(0, 8)}… user=${session.user.email}`);
   const { passwordHash: _ph, ...safe } = session.user;
   return safe;
 }

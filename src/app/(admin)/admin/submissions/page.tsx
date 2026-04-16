@@ -93,7 +93,7 @@ export default async function AdminSubmissionsPage() {
                         </a>
                       </>
                     ) : (
-                      <div className="text-neutral-500">—</div>
+                      <div className="text-neutral-500">(none)</div>
                     )}
                   </div>
                 );

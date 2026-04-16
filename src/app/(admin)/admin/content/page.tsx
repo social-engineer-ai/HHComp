@@ -16,7 +16,7 @@ export default function AdminContentIndex() {
         <Card
           href="/admin/content/data"
           title="Data files"
-          description="Competition brief, dataset, prediction template — student-facing downloads."
+          description="Competition brief, dataset, and prediction template. Student-facing downloads."
         />
         <Card
           href="/admin/content/grader"

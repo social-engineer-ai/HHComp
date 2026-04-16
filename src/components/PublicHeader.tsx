@@ -1,11 +1,19 @@
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth/session";
+import { logoutAction } from "@/app/(app)/logout/actions";
 
-export function PublicHeader() {
+export async function PublicHeader() {
+  const user = await getCurrentUser();
+  const loggedIn = !!user;
+  const isStaff = user?.role === "ADMIN" || user?.role === "MANAGER";
+
+  const brandHref = loggedIn ? (isStaff ? "/admin" : "/dashboard") : "/";
+
   return (
     <header className="border-b border-neutral-200 bg-white">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="font-semibold tracking-tight">
-          SCM Case Competition 2026
+        <Link href={brandHref} className="font-semibold tracking-tight">
+          SCM Analytics Competition 2026
         </Link>
         <nav className="flex items-center gap-5 text-sm">
           <Link href="/#timeline" className="text-neutral-700 hover:text-neutral-900">
@@ -17,18 +25,36 @@ export function PublicHeader() {
           <Link href="/announcements" className="text-neutral-700 hover:text-neutral-900">
             Announcements
           </Link>
-          <Link
-            href="/login"
-            className="text-neutral-700 hover:text-neutral-900"
-          >
-            Log in
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-md bg-red-700 px-4 py-2 font-medium text-white hover:bg-red-800"
-          >
-            Register
-          </Link>
+          {loggedIn ? (
+            <>
+              <Link
+                href={isStaff ? "/admin" : "/dashboard"}
+                className="text-neutral-700 hover:text-neutral-900"
+              >
+                {isStaff ? "Admin" : "Dashboard"}
+              </Link>
+              <form action={logoutAction}>
+                <button className="text-neutral-600 hover:text-neutral-900 underline">
+                  Log out
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-neutral-700 hover:text-neutral-900"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-md bg-red-700 px-4 py-2 font-medium text-white hover:bg-red-800"
+              >
+                Register
+              </Link>
+            </>
+          )}
         </nav>
       </div>
     </header>
@@ -42,7 +68,7 @@ export function PublicFooter() {
         <div className="grid md:grid-cols-3 gap-8">
           <div>
             <div className="font-semibold text-neutral-900">
-              Supply Chain Case Competition 2026
+              Supply Chain Analytics Competition 2026
             </div>
             <p className="mt-2">
               Presented by Horizon Hobby and the Gies College of Business at the

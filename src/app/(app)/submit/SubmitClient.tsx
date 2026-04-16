@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import { FormError, FormNotice } from "@/components/FormError";
 import { uploadSubmissionAction, type SubmitState } from "./actions";
 import type { SubmissionComponent } from "@prisma/client";
@@ -64,6 +64,8 @@ function ComponentZone({
     uploadSubmissionAction,
     {}
   );
+  const formRef = useRef<HTMLFormElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   return (
     <section className="rounded-lg border border-neutral-200 p-6">
@@ -106,25 +108,45 @@ function ComponentZone({
         </div>
       )}
 
-      <form action={formAction} className="mt-4 space-y-2" encType="multipart/form-data">
+      <form
+        ref={formRef}
+        action={formAction}
+        className="mt-4 space-y-2"
+        encType="multipart/form-data"
+      >
         <input type="hidden" name="component" value={component.key} />
         <FormError message={state.error} />
         <FormNotice message={state.notice} />
-        <div className="flex gap-2">
-          <input
-            name="file"
-            type="file"
-            accept={component.accept}
-            required
-            className="flex-1 text-sm"
-          />
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-60"
+        <div className="flex flex-wrap items-center gap-2">
+          <label
+            className={`cursor-pointer rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 ${
+              pending ? "pointer-events-none opacity-60" : ""
+            }`}
           >
-            {pending ? "Uploading…" : latestEntry ? "Replace" : "Upload"}
-          </button>
+            {pending
+              ? "Uploading…"
+              : latestEntry
+              ? `Replace ${component.label.toLowerCase()}`
+              : `Choose ${component.label.toLowerCase()}`}
+            <input
+              ref={fileRef}
+              name="file"
+              type="file"
+              accept={component.accept}
+              required
+              disabled={pending}
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  // Auto-submit as soon as the user picks a file
+                  formRef.current?.requestSubmit();
+                }
+              }}
+            />
+          </label>
+          <span className="text-xs text-neutral-500">
+            Single click: pick a file and it uploads automatically.
+          </span>
         </div>
       </form>
 

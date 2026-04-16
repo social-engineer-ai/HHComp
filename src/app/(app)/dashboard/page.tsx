@@ -26,16 +26,42 @@ export default async function DashboardPage() {
     where: { fileType: "DATASET", isActive: true },
   });
 
+  // Progress signals for the dashboard's Next steps list
+  const teamMemberIds = team?.members.map((m) => m.userId) ?? [];
+  const [teamDownloadCount, teamSubmissionLatestCount] = await Promise.all([
+    teamMemberIds.length > 0
+      ? prisma.dataDownloadLog.count({
+          where: { userId: { in: teamMemberIds } },
+        })
+      : Promise.resolve(0),
+    team
+      ? prisma.submission.count({
+          where: { teamId: team.id, isLatest: true },
+        })
+      : Promise.resolve(0),
+  ]);
+  const teamHasDownloaded = teamDownloadCount > 0;
+  const teamSubmissionComplete = teamSubmissionLatestCount >= 4;
+
   return (
     <div className="min-h-screen">
       <header className="border-b border-neutral-200">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-semibold">
-            SCM Case Competition 2026
+            SCM Analytics Competition 2026
           </Link>
           <nav className="flex items-center gap-4 text-sm">
             <Link href="/dashboard" className="text-neutral-700 hover:text-neutral-900">
               Dashboard
+            </Link>
+            <Link href="/nda" className="text-neutral-700 hover:text-neutral-900">
+              NDA
+            </Link>
+            <Link href="/data" className="text-neutral-700 hover:text-neutral-900">
+              Data
+            </Link>
+            <Link href="/submit" className="text-neutral-700 hover:text-neutral-900">
+              Submit
             </Link>
             <Link href="/leaderboard" className="text-neutral-700 hover:text-neutral-900">
               Leaderboard
@@ -96,6 +122,11 @@ export default async function DashboardPage() {
             teamTotalCount: ndaStatus.teamTotalCount,
           }}
           dataDownloadEnabled={dataDownloadsEnabled && ndaStatus.teamSignedAll && anyActiveDataFiles > 0}
+          teamHasDownloaded={teamHasDownloaded}
+          submissionProgress={{
+            latestCount: teamSubmissionLatestCount,
+            isComplete: teamSubmissionComplete,
+          }}
         />
       </main>
     </div>

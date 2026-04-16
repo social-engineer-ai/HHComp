@@ -68,11 +68,44 @@ export async function overrideScoreAction(
   if (!reason.trim()) return { error: "Reason is required." };
 
   const existing = await prisma.score.findUnique({ where: { teamId } });
-  if (!existing) return { error: "No existing score for this team." };
 
-  await prisma.score.update({
-    where: { teamId },
+  if (existing) {
+    await prisma.score.update({
+      where: { teamId },
+      data: {
+        scoreValue: value,
+        isManualOverride: true,
+        overrideReason: reason,
+        overriddenById: user.id,
+      },
+    });
+    await prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        action: "score.override",
+        entityType: "score",
+        entityId: existing.id,
+        details: { teamId, value, reason },
+      },
+    });
+    revalidatePath("/admin/leaderboard");
+    revalidatePath("/leaderboard");
+    return { notice: "Score override recorded." };
+  }
+
+  // No existing score — create one. Requires a prediction submission to anchor to.
+  const predSubmission = await prisma.submission.findFirst({
+    where: { teamId, componentType: "PREDICTION", isLatest: true },
+  });
+  if (!predSubmission) {
+    return {
+      error: "Team has no prediction submission; upload one first before scoring manually.",
+    };
+  }
+  const created = await prisma.score.create({
     data: {
+      teamId,
+      submissionId: predSubmission.id,
       scoreValue: value,
       isManualOverride: true,
       overrideReason: reason,
@@ -82,13 +115,13 @@ export async function overrideScoreAction(
   await prisma.auditLog.create({
     data: {
       userId: user.id,
-      action: "score.override",
+      action: "score.create_manual",
       entityType: "score",
-      entityId: existing.id,
+      entityId: created.id,
       details: { teamId, value, reason },
     },
   });
   revalidatePath("/admin/leaderboard");
   revalidatePath("/leaderboard");
-  return { notice: "Score override recorded." };
+  return { notice: "Manual score created." };
 }

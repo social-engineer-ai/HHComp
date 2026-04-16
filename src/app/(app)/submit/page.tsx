@@ -80,7 +80,7 @@ export default async function SubmitPage() {
       <header className="border-b border-neutral-200">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-semibold">
-            SCM Case Competition 2026
+            SCM Analytics Competition 2026
           </Link>
           <form action={logoutAction}>
             <button className="text-sm text-neutral-600 underline">Log out</button>

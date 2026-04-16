@@ -4,7 +4,7 @@ import { LeaderboardAdminClient } from "./LeaderboardAdminClient";
 export const dynamic = "force-dynamic";
 
 export default async function AdminLeaderboardPage() {
-  const [scores, settings, jobs] = await Promise.all([
+  const [scores, settings, jobs, allCompleteTeams] = await Promise.all([
     prisma.score.findMany({
       orderBy: { scoreValue: "asc" },
       include: { team: true, submission: true },
@@ -15,7 +15,22 @@ export default async function AdminLeaderboardPage() {
       take: 20,
       include: { submission: { include: { team: true } } },
     }),
+    prisma.team.findMany({
+      where: { status: "COMPLETE" },
+      include: { score: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
+
+  // Build a unified list: scored teams first (ordered by score), then unscored teams
+  const scoredTeamIds = new Set(scores.map((s) => s.teamId));
+  const unscored = allCompleteTeams
+    .filter((t) => !scoredTeamIds.has(t.id))
+    .map((t) => ({
+      teamId: t.id,
+      teamName: t.name,
+      isFinalist: t.isFinalist,
+    }));
 
   return (
     <div>
@@ -30,11 +45,13 @@ export default async function AdminLeaderboardPage() {
           id: s.id,
           teamId: s.teamId,
           teamName: s.team.name,
+          isFinalist: s.team.isFinalist,
           scoreValue: s.scoreValue,
           isManualOverride: s.isManualOverride,
           isLate: s.submission.isLate,
           scoredAt: s.scoredAt.toISOString(),
         }))}
+        unscoredTeams={unscored}
         recentJobs={jobs.map((j) => ({
           id: j.id,
           status: j.status,

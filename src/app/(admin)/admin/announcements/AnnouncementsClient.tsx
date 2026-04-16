@@ -63,15 +63,29 @@ export function AnnouncementsClient({ items }: { items: Item[] }) {
               key={a.id}
               className="rounded-lg border border-neutral-200 p-5 bg-white"
             >
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
                   <h3 className="font-semibold">{a.title}</h3>
                   <div className="text-xs text-neutral-500 mt-1">
                     {new Date(a.createdAt).toLocaleString()} · {a.authorName}
                   </div>
                 </div>
                 <form action={deleteAnnouncementAction.bind(null, a.id)}>
-                  <button className="text-xs text-red-700 underline">Delete</button>
+                  <button
+                    type="submit"
+                    onClick={(e) => {
+                      if (
+                        !window.confirm(
+                          `Delete the announcement "${a.title}"? This cannot be undone.`
+                        )
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="rounded-md bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1.5 text-sm font-semibold"
+                  >
+                    Delete
+                  </button>
                 </form>
               </div>
               <pre className="text-sm text-neutral-700 mt-3 whitespace-pre-wrap font-sans">

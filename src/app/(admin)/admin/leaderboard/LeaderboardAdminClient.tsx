@@ -14,10 +14,17 @@ type ScoreRow = {
   id: string;
   teamId: string;
   teamName: string;
+  isFinalist: boolean;
   scoreValue: number;
   isManualOverride: boolean;
   isLate: boolean;
   scoredAt: string;
+};
+
+type UnscoredTeam = {
+  teamId: string;
+  teamName: string;
+  isFinalist: boolean;
 };
 
 type JobRow = {
@@ -32,10 +39,12 @@ type JobRow = {
 export function LeaderboardAdminClient({
   visibility,
   scores,
+  unscoredTeams,
   recentJobs,
 }: {
   visibility: string;
   scores: ScoreRow[];
+  unscoredTeams: UnscoredTeam[];
   recentJobs: JobRow[];
 }) {
   const [overrideState, overrideAction, overriding] = useActionState<LBState, FormData>(
@@ -94,6 +103,11 @@ export function LeaderboardAdminClient({
                   <td className="px-4 py-2 font-semibold">#{s.rank}</td>
                   <td className="px-4 py-2">
                     {s.teamName}
+                    {s.isFinalist && (
+                      <span className="ml-2 text-xs font-medium px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                        FINALIST
+                      </span>
+                    )}
                     {s.isManualOverride && (
                       <span className="ml-2 text-xs text-amber-700">(override)</span>
                     )}
@@ -143,6 +157,67 @@ export function LeaderboardAdminClient({
         <FormError message={overrideState.error} />
         <FormNotice message={overrideState.notice} />
       </section>
+
+      {unscoredTeams.length > 0 && (
+        <section>
+          <h2 className="font-semibold mb-3">
+            Complete teams without scores ({unscoredTeams.length})
+          </h2>
+          <p className="text-xs text-neutral-500 mb-3">
+            These teams have finished registration but don&apos;t have a score yet, either because
+            the grader hasn&apos;t run, the answer key isn&apos;t uploaded, or the team hasn&apos;t submitted a
+            prediction file. You can enter a manual score here (requires the team to have
+            uploaded a prediction file first).
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-neutral-50 text-left">
+                <tr>
+                  <th className="px-4 py-2 font-semibold">Team</th>
+                  <th className="px-4 py-2 font-semibold">Manual score</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-200">
+                {unscoredTeams.map((t) => (
+                  <tr key={t.teamId}>
+                    <td className="px-4 py-2">
+                      {t.teamName}
+                      {t.isFinalist && (
+                        <span className="ml-2 text-xs font-medium px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                          FINALIST
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2">
+                      <form action={overrideAction} className="flex gap-1">
+                        <input type="hidden" name="teamId" value={t.teamId} />
+                        <input
+                          name="value"
+                          type="number"
+                          step="0.0001"
+                          placeholder="wMAPE"
+                          required
+                          className="w-20 rounded border border-neutral-300 px-1.5 py-0.5 text-xs"
+                        />
+                        <input
+                          name="reason"
+                          type="text"
+                          placeholder="Reason (required)"
+                          required
+                          className="w-36 rounded border border-neutral-300 px-1.5 py-0.5 text-xs"
+                        />
+                        <button className="text-xs text-red-700 underline" disabled={overriding}>
+                          Create
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       <section>
         <h2 className="font-semibold mb-3">Recent grading jobs</h2>

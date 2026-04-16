@@ -31,7 +31,7 @@ export function VerifyEmailForm() {
   return (
     <AuthLayout
       title="Verify your email"
-      subtitle="Enter the 6-digit code we just sent to your inbox."
+      subtitle="Enter the 6-digit code we just sent to your inbox. If it doesn't arrive within a minute, check your spam or junk folder."
     >
       <form action={verifyAction} className="space-y-4">
         <FormError message={verifyState.error} />

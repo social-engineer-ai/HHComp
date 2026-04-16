@@ -6,7 +6,7 @@
 const wrap = (body: string) => `
 <div style="font-family: -apple-system, Segoe UI, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a; line-height: 1.55;">
   <div style="border-top: 4px solid #E31837; padding: 24px 0; border-bottom: 1px solid #eee; margin-bottom: 24px;">
-    <h1 style="margin:0; font-size: 20px; letter-spacing: -0.01em;">Supply Chain Case Competition 2026</h1>
+    <h1 style="margin:0; font-size: 20px; letter-spacing: -0.01em;">Supply Chain Analytics Competition 2026</h1>
     <p style="margin: 4px 0 0; color:#666; font-size: 13px;">Gies College of Business × Horizon Hobby</p>
   </div>
   ${body}
@@ -18,7 +18,7 @@ const wrap = (body: string) => `
 
 export const emailTemplates = {
   verificationCode: (args: { code: string; name: string }) => ({
-    subject: `Verify your email — code ${args.code}`,
+    subject: `Verify your email, code ${args.code}`,
     html: wrap(`
       <p>Hi ${escapeHtml(args.name)},</p>
       <p>Use the 6-digit code below to verify your email and activate your account:</p>
@@ -29,12 +29,12 @@ export const emailTemplates = {
   }),
 
   passwordResetCode: (args: { code: string; name: string }) => ({
-    subject: `Password reset code — ${args.code}`,
+    subject: `Password reset code: ${args.code}`,
     html: wrap(`
       <p>Hi ${escapeHtml(args.name)},</p>
       <p>You requested a password reset. Use this 6-digit code on the reset page:</p>
       <p style="font-size: 28px; letter-spacing: 6px; font-weight: 700; background:#f4f4f4; padding: 12px 18px; display:inline-block; border-radius: 6px;">${args.code}</p>
-      <p>If you didn't request this, you can ignore this email — your password will not change.</p>
+      <p>If you didn't request this, you can ignore this email. Your password will not change.</p>
     `),
     text: `Hi ${args.name},\n\nPassword reset code: ${args.code}\n\nIgnore this email if you didn't request a reset.`,
   }),
@@ -48,7 +48,7 @@ export const emailTemplates = {
     subject: `You've been invited to join team "${args.teamName}"`,
     html: wrap(`
       <p>Hi,</p>
-      <p><strong>${escapeHtml(args.leadName)}</strong> has invited you to join their team <strong>${escapeHtml(args.teamName)}</strong> for the 2026 Supply Chain Case Competition, presented by Horizon Hobby.</p>
+      <p><strong>${escapeHtml(args.leadName)}</strong> has invited you to join their team <strong>${escapeHtml(args.teamName)}</strong> for the 2026 Supply Chain Analytics Competition, presented by Horizon Hobby.</p>
       <p>Your invitation code:</p>
       <p style="font-size: 22px; letter-spacing: 4px; font-weight: 700; background:#f4f4f4; padding: 10px 16px; display:inline-block; border-radius: 6px;">${args.code}</p>
       <p><a href="${args.joinUrl}" style="display:inline-block; margin-top:12px; padding: 12px 24px; background:#E31837; color:#fff; text-decoration:none; border-radius:6px; font-weight:600;">Join the team</a></p>
@@ -67,7 +67,7 @@ export const emailTemplates = {
   }),
 
   ndaConfirmed: (args: { teamName: string }) => ({
-    subject: `NDA confirmed — data download available`,
+    subject: `NDA confirmed, data download available`,
     html: wrap(`
       <p>Both members of team <strong>${escapeHtml(args.teamName)}</strong> have signed the NDA.</p>
       <p>You can now download the competition data package from your dashboard.</p>
@@ -90,7 +90,7 @@ export const emailTemplates = {
   }),
 
   submissionComplete: (args: { teamName: string; components: string[] }) => ({
-    subject: `All four components received — submission complete`,
+    subject: `All four components received, submission complete`,
     html: wrap(`
       <p>Your team <strong>${escapeHtml(args.teamName)}</strong> has uploaded all four submission components:</p>
       <ul>${args.components.map((c) => `<li>${escapeHtml(c)}</li>`).join("")}</ul>
@@ -100,7 +100,7 @@ export const emailTemplates = {
   }),
 
   scoreRecorded: (args: { teamName: string; score: number; rank?: number }) => ({
-    subject: `Scoring complete — wMAPE ${args.score.toFixed(4)}`,
+    subject: `Scoring complete, wMAPE ${args.score.toFixed(4)}`,
     html: wrap(`
       <p>Your latest submission for team <strong>${escapeHtml(args.teamName)}</strong> has been scored.</p>
       <p><strong>Weighted MAPE:</strong> ${args.score.toFixed(4)}</p>
@@ -110,7 +110,7 @@ export const emailTemplates = {
   }),
 
   scoringError: (args: { teamName: string; message: string }) => ({
-    subject: `Scoring failed — please check your file`,
+    subject: `Scoring failed, please check your file`,
     html: wrap(`
       <p>We could not score your latest prediction file for team <strong>${escapeHtml(args.teamName)}</strong>.</p>
       <p><strong>Reason:</strong> ${escapeHtml(args.message)}</p>
@@ -120,7 +120,7 @@ export const emailTemplates = {
   }),
 
   deadlineReminder: (args: { teamName: string; hoursLeft: number }) => ({
-    subject: `Submission deadline reminder — ${args.hoursLeft} hour${args.hoursLeft === 1 ? "" : "s"} left`,
+    subject: `Submission deadline reminder: ${args.hoursLeft} hour${args.hoursLeft === 1 ? "" : "s"} left`,
     html: wrap(`
       <p>Reminder for team <strong>${escapeHtml(args.teamName)}</strong>: the submission deadline is in <strong>${args.hoursLeft} hour${args.hoursLeft === 1 ? "" : "s"}</strong>.</p>
       <p>If you haven't completed all four components, please do so before Friday May 1, 11:59 PM Central.</p>
@@ -129,7 +129,7 @@ export const emailTemplates = {
   }),
 
   lateSubmissionNotice: (args: { teamName: string; component: string }) => ({
-    subject: `Late submission accepted — ${args.component}`,
+    subject: `Late submission accepted: ${args.component}`,
     html: wrap(`
       <p>Your <strong>${args.component}</strong> upload for team <strong>${escapeHtml(args.teamName)}</strong> was received after the primary deadline (May 1, 11:59 PM Central).</p>
       <p>It has been accepted as a <strong>late submission</strong> and will be flagged accordingly.</p>
@@ -138,20 +138,20 @@ export const emailTemplates = {
   }),
 
   finalistSelected: (args: { teamName: string; presentationInfo: string }) => ({
-    subject: `Congratulations — you're a finalist!`,
+    subject: `Congratulations, you're a finalist!`,
     html: wrap(`
-      <p>Congratulations, team <strong>${escapeHtml(args.teamName)}</strong> — you are a finalist for the 2026 Horizon Hobby × Gies Supply Chain Case Competition.</p>
+      <p>Congratulations, team <strong>${escapeHtml(args.teamName)}</strong>. You are a finalist for the 2026 Horizon Hobby × Gies Supply Chain Analytics Competition.</p>
       <p><strong>Presentation details:</strong></p>
       <div>${args.presentationInfo}</div>
       <p>A dedicated upload slot for your final presentation is now available on your dashboard.</p>
     `),
-    text: `Congratulations team ${args.teamName} — you are a finalist. ${args.presentationInfo}`,
+    text: `Congratulations team ${args.teamName}, you are a finalist. ${args.presentationInfo}`,
   }),
 
   nonFinalistNotice: (args: { teamName: string; finalRank: number; finalScore: number }) => ({
     subject: `Thank you for competing`,
     html: wrap(`
-      <p>Thank you for your hard work on the 2026 Supply Chain Case Competition.</p>
+      <p>Thank you for your hard work on the 2026 Supply Chain Analytics Competition.</p>
       <p>Your team <strong>${escapeHtml(args.teamName)}</strong> finished at rank <strong>#${args.finalRank}</strong> with a weighted MAPE of <strong>${args.finalScore.toFixed(4)}</strong>.</p>
       <p>Final presentations will be held May 7 with the top 3 teams. We appreciate your effort and hope you learned a lot.</p>
     `),

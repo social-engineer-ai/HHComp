@@ -30,12 +30,16 @@ export function DashboardClient({
   pendingInvitation,
   nda,
   dataDownloadEnabled,
+  teamHasDownloaded,
+  submissionProgress,
 }: {
   user: { id: string; name: string; email: string };
   team: Team | null;
   pendingInvitation: { code: string; inviteeEmail: string; expiresAt: string } | null;
   nda: NDAInfo;
   dataDownloadEnabled: boolean;
+  teamHasDownloaded: boolean;
+  submissionProgress: { latestCount: number; isComplete: boolean };
 }) {
   const [state, formAction, pending] = useActionState<InviteState, FormData>(
     sendInvitationAction,
@@ -53,7 +57,7 @@ export function DashboardClient({
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs uppercase tracking-wider text-neutral-500">Team</p>
-            <h2 className="text-xl font-semibold mt-1">{team?.name ?? "—"}</h2>
+            <h2 className="text-xl font-semibold mt-1">{team?.name ?? "(no team)"}</h2>
           </div>
           <span
             className={`text-xs font-medium px-2 py-1 rounded-full ${
@@ -62,7 +66,7 @@ export function DashboardClient({
                 : "bg-amber-100 text-amber-800"
             }`}
           >
-            {isComplete ? "Complete — 2 of 2" : "Incomplete — 1 of 2"}
+            {isComplete ? "Complete (2 of 2)" : "Incomplete (1 of 2)"}
           </span>
         </div>
 
@@ -203,6 +207,37 @@ export function DashboardClient({
         )}
       </section>
 
+      {/* Submission card */}
+      <section className="rounded-lg border border-neutral-200 p-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-neutral-500">Submit</p>
+            <h2 className="text-xl font-semibold mt-1">Deliverables</h2>
+          </div>
+          <span
+            className={`text-xs font-medium px-2 py-1 rounded-full ${
+              submissionProgress.isComplete
+                ? "bg-green-100 text-green-800"
+                : submissionProgress.latestCount > 0
+                ? "bg-amber-100 text-amber-800"
+                : "bg-neutral-100 text-neutral-600"
+            }`}
+          >
+            {submissionProgress.latestCount} of 4 uploaded
+          </span>
+        </div>
+        <p className="mt-3 text-sm text-neutral-600">
+          Upload the four required components: prediction file, code, methodology, and
+          presentation. You can replace any component before the May 1 deadline.
+        </p>
+        <Link
+          href="/submit"
+          className="mt-4 inline-block rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800"
+        >
+          Go to submissions
+        </Link>
+      </section>
+
       {/* Next steps */}
       <section className="rounded-lg border border-neutral-200 p-6">
         <h2 className="text-lg font-semibold">Next steps</h2>
@@ -213,10 +248,12 @@ export function DashboardClient({
           <li className={ndaComplete ? "text-neutral-400 line-through" : "text-neutral-500"}>
             2. Both members sign the NDA
           </li>
-          <li className={dataDownloadEnabled ? "text-neutral-500" : "text-neutral-400"}>
+          <li className={teamHasDownloaded ? "text-neutral-400 line-through" : "text-neutral-500"}>
             3. Download the data package
           </li>
-          <li className="text-neutral-500">4. Submit your four deliverables by May 1</li>
+          <li className={submissionProgress.isComplete ? "text-neutral-400 line-through" : "text-neutral-500"}>
+            4. Submit your four deliverables by May 1
+          </li>
         </ol>
       </section>
     </div>

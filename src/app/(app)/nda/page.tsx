@@ -12,12 +12,20 @@ export default async function NDAPage() {
   const team = await getTeamForUser(user.id);
   const status = await getNDAStatusForUser(user.id, team?.id);
 
-  let pdfUrl: string | null = null;
+  let pdfViewUrl: string | null = null;
+  let pdfDownloadUrl: string | null = null;
   if (status.activeFile) {
-    pdfUrl = await getPresignedDownloadUrl(
+    pdfViewUrl = await getPresignedDownloadUrl(
       status.activeFile.s3Key,
       600,
-      status.activeFile.filename
+      status.activeFile.filename,
+      "inline"
+    );
+    pdfDownloadUrl = await getPresignedDownloadUrl(
+      status.activeFile.s3Key,
+      600,
+      status.activeFile.filename,
+      "attachment"
     );
   }
 
@@ -26,7 +34,7 @@ export default async function NDAPage() {
       <header className="border-b border-neutral-200">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-semibold">
-            SCM Case Competition 2026
+            SCM Analytics Competition 2026
           </Link>
           <form action={logoutAction}>
             <button className="text-sm text-neutral-600 underline">Log out</button>
@@ -59,15 +67,37 @@ export default async function NDAPage() {
           </div>
         ) : (
           <div className="mt-8 space-y-6">
-            <div className="rounded-lg border border-neutral-200 overflow-hidden">
-              {pdfUrl && (
-                <iframe
-                  src={pdfUrl}
-                  className="w-full h-[70vh] border-0"
-                  title="NDA document"
-                />
-              )}
-            </div>
+            {pdfViewUrl && (
+              <div className="rounded-lg border border-neutral-200 overflow-hidden bg-neutral-100">
+                <object
+                  data={pdfViewUrl}
+                  type="application/pdf"
+                  className="w-full h-[75vh]"
+                  aria-label="NDA document"
+                >
+                  <iframe
+                    src={pdfViewUrl}
+                    className="w-full h-[75vh] border-0"
+                    title="NDA document"
+                  />
+                </object>
+              </div>
+            )}
+
+            {pdfDownloadUrl && (
+              <div className="flex items-center justify-between text-sm text-neutral-600">
+                <span>
+                  Having trouble viewing the embedded PDF?
+                </span>
+                <a
+                  href={pdfDownloadUrl}
+                  className="text-red-700 underline"
+                  download
+                >
+                  Download the PDF
+                </a>
+              </div>
+            )}
 
             <NDASignClient registeredName={user.name} />
           </div>

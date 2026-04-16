@@ -17,7 +17,7 @@ export function AuthLayout({
       <header className="border-b border-neutral-200">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="font-semibold tracking-tight">
-            SCM Case Competition 2026
+            SCM Analytics Competition 2026
           </Link>
           <nav className="text-sm text-neutral-600 flex gap-5">
             <Link href="/" className="hover:text-neutral-900">Home</Link>

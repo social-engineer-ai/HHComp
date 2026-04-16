@@ -29,6 +29,11 @@ export default async function LeaderboardPage() {
     include: { team: true, submission: true },
     take: settings?.leaderboardTopN ?? undefined,
   });
+  const finalists = await prisma.team.findMany({
+    where: { isFinalist: true },
+    include: { score: true },
+    orderBy: { name: "asc" },
+  });
   if (frozen && user.role === "STUDENT") {
     scores = [];
   }
@@ -38,7 +43,7 @@ export default async function LeaderboardPage() {
       <header className="border-b border-neutral-200">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-semibold">
-            SCM Case Competition 2026
+            SCM Analytics Competition 2026
           </Link>
           <form action={logoutAction}>
             <button className="text-sm text-neutral-600 underline">Log out</button>
@@ -64,6 +69,29 @@ export default async function LeaderboardPage() {
         {frozen && user.role === "STUDENT" && (
           <div className="mt-8 rounded-lg border border-blue-200 bg-blue-50 p-6 text-blue-900">
             The leaderboard is frozen pending finalist notification. Scores will be revealed after organizers unfreeze.
+          </div>
+        )}
+
+        {!frozen && finalists.length > 0 && (
+          <div className="mt-8 rounded-lg border border-purple-200 bg-purple-50 p-5">
+            <div className="text-xs font-semibold uppercase tracking-widest text-purple-800">
+              Finalists
+            </div>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {finalists.map((t) => (
+                <li
+                  key={t.id}
+                  className="inline-flex items-center gap-2 rounded-full bg-white border border-purple-200 px-3 py-1 text-sm text-purple-900"
+                >
+                  <span className="font-semibold">{t.name}</span>
+                  {t.score && (
+                    <span className="font-mono text-xs text-purple-700">
+                      {t.score.scoreValue.toFixed(4)}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

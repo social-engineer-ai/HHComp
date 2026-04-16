@@ -62,13 +62,16 @@ function safeName(s: string): string {
 export async function getPresignedDownloadUrl(
   key: string,
   ttlSeconds = 300,
-  downloadFilename?: string
+  downloadFilename?: string,
+  disposition: "attachment" | "inline" = "attachment"
 ): Promise<string> {
   const cmd = new GetObjectCommand({
     Bucket: BUCKET,
     Key: key,
     ResponseContentDisposition: downloadFilename
-      ? `attachment; filename="${downloadFilename}"`
+      ? `${disposition}; filename="${downloadFilename}"`
+      : disposition === "inline"
+      ? "inline"
       : undefined,
   });
   return getSignedUrl(getClient(), cmd, { expiresIn: ttlSeconds });

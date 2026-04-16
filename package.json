@@ -13,6 +13,7 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "gmail:bootstrap": "tsx scripts/gmail-oauth-bootstrap.ts",
+    "gmail:exchange": "tsx scripts/gmail-exchange-code.ts",
     "aws:provision": "tsx scripts/aws-provision.ts",
     "typecheck": "tsc --noEmit"
   },

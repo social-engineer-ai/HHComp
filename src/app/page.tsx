@@ -7,47 +7,77 @@ export default function LandingPage() {
     <>
       <PublicHeader />
 
+      {/* Pre-launch notice */}
+      <div className="bg-amber-400 text-amber-950 border-b border-amber-500">
+        <div className="max-w-6xl mx-auto px-6 py-3 text-sm md:text-base font-semibold text-center">
+          The competition has not started yet. Please come back on Friday, April 17, 2026 to register your team.
+        </div>
+      </div>
+
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-red-900 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-24 md:py-32 relative">
-          <p className="text-xs font-semibold uppercase tracking-widest text-red-300">
-            April 17 – May 7, 2026
-          </p>
-          <h1 className="mt-4 text-4xl md:text-6xl font-bold tracking-tight leading-tight max-w-4xl">
-            Supply Chain Case Competition{" "}
-            <span className="text-red-400">2026</span>
-          </h1>
-          <p className="mt-4 text-lg md:text-xl text-neutral-200 max-w-2xl">
-            Presented by Horizon Hobby & the Gies College of Business. Build
-            a predictive model, present to industry judges, and win cash prizes.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/register"
-              className="rounded-md bg-red-600 hover:bg-red-700 px-6 py-3 font-semibold text-white shadow-lg"
-            >
-              Register your team
-            </Link>
-            <Link
-              href="#about"
-              className="rounded-md border border-white/30 px-6 py-3 font-semibold text-white hover:bg-white/10"
-            >
-              Learn more
-            </Link>
+        <div className="max-w-6xl mx-auto px-6 py-20 md:py-28 relative grid md:grid-cols-5 gap-10 items-center">
+          <div className="md:col-span-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-red-300">
+              April 17 to May 7, 2026
+            </p>
+            <h1 className="mt-4 text-4xl md:text-6xl font-bold tracking-tight leading-tight">
+              Supply Chain Analytics Competition{" "}
+              <span className="text-red-400">2026</span>
+            </h1>
+            <p className="mt-4 text-lg md:text-xl text-neutral-200 max-w-2xl">
+              Presented by Horizon Hobby & the Gies College of Business. Build
+              a predictive model, present to industry judges, and win cash prizes.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/register"
+                className="rounded-md bg-red-600 hover:bg-red-700 px-6 py-3 font-semibold text-white shadow-lg"
+              >
+                Register your team
+              </Link>
+              <Link
+                href="#about"
+                className="rounded-md border border-white/30 px-6 py-3 font-semibold text-white hover:bg-white/10"
+              >
+                Learn more
+              </Link>
+            </div>
+            <div className="mt-10 flex flex-wrap gap-8 text-sm">
+              <div>
+                <div className="text-2xl font-bold text-red-400">$1,100</div>
+                <div className="text-neutral-300">In cash prizes</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-red-400">2 weeks</div>
+                <div className="text-neutral-300">Competition window</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-red-400">2-person</div>
+                <div className="text-neutral-300">Teams</div>
+              </div>
+            </div>
           </div>
-          <div className="mt-10 flex flex-wrap gap-8 text-sm">
-            <div>
-              <div className="text-2xl font-bold text-red-400">$1,100</div>
-              <div className="text-neutral-300">In cash prizes</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-red-400">2 weeks</div>
-              <div className="text-neutral-300">Competition window</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-red-400">2-person</div>
-              <div className="text-neutral-300">Teams</div>
-            </div>
+
+          <div className="md:col-span-2 relative">
+            <div
+              className="absolute inset-0 -m-8 blur-3xl pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(circle at center, rgba(239,68,68,0.35), transparent 70%)",
+              }}
+              aria-hidden
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/img/losi-22s-sprint.jpg"
+              alt="LOSI 22S Sprint Car, the product line at the heart of this year's competition"
+              className="relative w-full h-auto drop-shadow-2xl"
+              fetchPriority="high"
+            />
+            <p className="text-xs text-neutral-400 text-center mt-3">
+              LOSI 22S Sprint 2WD, the product line at the heart of this year's forecasting challenge
+            </p>
           </div>
         </div>
       </section>
@@ -59,7 +89,7 @@ export default function LandingPage() {
             Our Partner
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight">
-            Horizon Hobby — 40 years of RC innovation
+            Horizon Hobby: 40 years of RC innovation
           </h2>
           <p className="mt-4 text-neutral-700 leading-relaxed">
             Headquartered right here in Champaign, Horizon Hobby is the world's
@@ -79,7 +109,7 @@ export default function LandingPage() {
           <h3 className="mt-2 text-xl font-semibold">Forecasting attach rates</h3>
           <p className="mt-3 text-neutral-700 text-sm leading-relaxed">
             Horizon sells world-class RC products. When customers need a
-            replacement part, Horizon wants it to be available — but predicting{" "}
+            replacement part, Horizon wants it to be available, but predicting{" "}
             <em>which</em> parts will be needed and <em>when</em> is hard.
           </p>
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm">

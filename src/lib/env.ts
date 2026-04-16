@@ -16,7 +16,7 @@ const schema = z.object({
   GOOGLE_CLIENT_SECRET: z.string(),
   GMAIL_REFRESH_TOKEN: z.string().optional(),
   GMAIL_SENDER_ADDRESS: z.string().email(),
-  GMAIL_SENDER_NAME: z.string().default("Gies Supply Chain Case Competition"),
+  GMAIL_SENDER_NAME: z.string().default("Gies Supply Chain Analytics Competition"),
 
   GRADER_URL: z.string().url().optional(),
   GRADER_SHARED_SECRET: z.string().optional(),

@@ -10,7 +10,7 @@ AWS account: `233894722519` (us-east-2)
 | IAM user (local dev) | `hh-comp-app` | Access key in `.secrets/iam-app-access-key.json`. Scoped to S3 bucket. |
 | IAM role (EC2) | `hh-comp-ec2-role` | Trusted by ec2.amazonaws.com |
 | IAM instance profile | `hh-comp-ec2-profile` | Attached to EC2; app reads S3 via IMDSv2 |
-| EC2 instance | `i-03cf8d1f3a158d259` | t3.medium, Ubuntu 22.04, 30 GB gp3, termination protection ON, IMDSv2 required |
+| EC2 instance | `i-03cf8d1f3a158d259` | **t3.large** (upgraded from t3.medium on 2026-04-15 after OOM during `docker compose build app`), Ubuntu 22.04, 30 GB gp3, termination protection ON, IMDSv2 required |
 | SSH key pair | `hh-comp-key` (ed25519) | Private key at `.secrets/hh-comp-key.pem` |
 | Security group | `sg-00bb0732bffbf5de3` | name `hh-comp-web`, ingress 22/80/443 from 0.0.0.0/0 |
 | Default VPC | `vpc-04efdf2770a11e232` | — |
