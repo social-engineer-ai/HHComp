@@ -98,6 +98,7 @@ export async function joinAction(
   });
 
   // Email: team-complete confirmation to both members
+  const appUrl = process.env.PUBLIC_APP_URL ?? process.env.APP_URL ?? "";
   const team = await prisma.team.findUnique({
     where: { id: invitation.teamId },
     include: { members: { include: { user: true } } },
@@ -108,7 +109,7 @@ export async function joinAction(
       to: recipients,
       ...emailTemplates.teamComplete({
         teamName: team.name,
-        nextStep: "Both members must sign the NDA before accessing data. Sign it from your dashboard.",
+        loginUrl: `${appUrl}/login`,
       }),
     });
   }

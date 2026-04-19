@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { AuthLayout } from "@/components/AuthLayout";
 import { FormError } from "@/components/FormError";
+import { PasswordInput } from "@/components/PasswordInput";
 import { loginAction, type LoginState } from "./actions";
 
 const initial: LoginState = {};
@@ -44,13 +45,7 @@ export default function LoginPage() {
           <label className="block text-sm font-medium mb-1" htmlFor="password">
             Password
           </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            className="w-full rounded-md border border-neutral-300 px-3 py-2"
-          />
+          <PasswordInput id="password" name="password" required />
         </div>
         <button
           type="submit"

@@ -52,6 +52,31 @@ export async function verifyEmailAction(
     userAgent: hdrs.get("user-agent"),
   });
 
+  // Send welcome email based on whether they're a lead or a member
+  const appUrl = process.env.PUBLIC_APP_URL ?? process.env.APP_URL ?? "";
+  const loginUrl = `${appUrl}/login`;
+  const membership = await prisma.teamMembership.findUnique({
+    where: { userId: user.id },
+    include: { team: true },
+  });
+  if (membership) {
+    if (membership.role === "LEAD") {
+      await sendEmail({
+        to: user.email,
+        ...emailTemplates.welcomeTeamLead({ name: user.name, loginUrl }),
+      });
+    } else {
+      await sendEmail({
+        to: user.email,
+        ...emailTemplates.welcomeTeamMember({
+          name: user.name,
+          teamName: membership.team.name,
+          loginUrl,
+        }),
+      });
+    }
+  }
+
   redirect("/dashboard");
 }
 

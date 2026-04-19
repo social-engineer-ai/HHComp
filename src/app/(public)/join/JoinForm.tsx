@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AuthLayout } from "@/components/AuthLayout";
 import { FormError } from "@/components/FormError";
+import { PasswordInput } from "@/components/PasswordInput";
 import { joinAction, type JoinState } from "./actions";
 
 const initial: JoinState = {};
@@ -81,14 +82,7 @@ export function JoinForm() {
           <label className="block text-sm font-medium mb-1" htmlFor="password">
             Password
           </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            minLength={8}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2"
-          />
+          <PasswordInput id="password" name="password" required minLength={8} />
         </div>
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" name="eligibility" value="yes" required className="mt-0.5" />

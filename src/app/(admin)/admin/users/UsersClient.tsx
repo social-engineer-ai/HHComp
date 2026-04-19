@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { FormError, FormNotice } from "@/components/FormError";
+import { PasswordInput } from "@/components/PasswordInput";
 import {
   createStaffAccountAction,
   promoteToManagerAction,
@@ -85,13 +86,12 @@ export function UsersClient({
             placeholder="email@anywhere.com"
             className="rounded-md border border-neutral-300 px-3 py-2"
           />
-          <input
+          <PasswordInput
             name="password"
-            type="password"
             required
             minLength={8}
             placeholder="Temporary password (min 8 chars)"
-            className="rounded-md border border-neutral-300 px-3 py-2"
+            className="rounded-md border border-neutral-300 px-3 py-2 pr-16"
           />
           <select
             name="role"

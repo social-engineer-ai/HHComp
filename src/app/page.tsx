@@ -7,10 +7,10 @@ export default function LandingPage() {
     <>
       <PublicHeader />
 
-      {/* Pre-launch notice */}
-      <div className="bg-amber-400 text-amber-950 border-b border-amber-500">
+      {/* Registration open notice */}
+      <div className="bg-green-600 text-white border-b border-green-700">
         <div className="max-w-6xl mx-auto px-6 py-3 text-sm md:text-base font-semibold text-center">
-          The competition has not started yet. Please come back on Friday, April 17, 2026 to register your team.
+          You may now register your team and sign the NDA. We will send a notification email when the data is ready to download.
         </div>
       </div>
 
@@ -45,8 +45,8 @@ export default function LandingPage() {
             </div>
             <div className="mt-10 flex flex-wrap gap-8 text-sm">
               <div>
-                <div className="text-2xl font-bold text-red-400">$1,100</div>
-                <div className="text-neutral-300">In cash prizes</div>
+                <div className="text-2xl font-bold text-red-400">$1,500+</div>
+                <div className="text-neutral-300">In prizes</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-red-400">2 weeks</div>
@@ -148,19 +148,19 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="mt-10 rounded-lg border border-neutral-200 bg-white p-6">
-            <p className="text-xs font-semibold uppercase tracking-widest text-red-700">Cash prizes</p>
-            <div className="mt-3 flex gap-8">
-              <div>
-                <div className="text-2xl font-bold">$500</div>
-                <div className="text-sm text-neutral-600">1st place</div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-red-700">Prizes</p>
+            <div className="mt-3 space-y-3">
+              <div className="flex items-baseline gap-3">
+                <span className="text-sm font-semibold text-neutral-500 w-20">1st place</span>
+                <span className="text-xl font-bold">$500 + LOSI 22S Sprint Car</span>
               </div>
-              <div>
-                <div className="text-2xl font-bold">$350</div>
-                <div className="text-sm text-neutral-600">2nd place</div>
+              <div className="flex items-baseline gap-3">
+                <span className="text-sm font-semibold text-neutral-500 w-20">2nd place</span>
+                <span className="text-xl font-bold">$350</span>
               </div>
-              <div>
-                <div className="text-2xl font-bold">$250</div>
-                <div className="text-sm text-neutral-600">3rd place</div>
+              <div className="flex items-baseline gap-3">
+                <span className="text-sm font-semibold text-neutral-500 w-20">3rd place</span>
+                <span className="text-xl font-bold">$250</span>
               </div>
             </div>
           </div>

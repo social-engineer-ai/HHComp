@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { AuthLayout } from "@/components/AuthLayout";
 import { FormError } from "@/components/FormError";
+import { PasswordInput } from "@/components/PasswordInput";
 import { registerAction, type RegisterState } from "./actions";
 
 const initial: RegisterState = {};
@@ -63,13 +64,12 @@ export default function RegisterPage() {
           <label className="block text-sm font-medium mb-1" htmlFor="password">
             Password
           </label>
-          <input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             required
             minLength={8}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-600"
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 pr-16 focus:outline-none focus:ring-2 focus:ring-red-600"
           />
           <p className="text-xs text-neutral-500 mt-1">At least 8 characters.</p>
         </div>

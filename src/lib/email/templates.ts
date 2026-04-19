@@ -57,13 +57,49 @@ export const emailTemplates = {
     text: `You've been invited to join team "${args.teamName}" by ${args.leadName}.\n\nInvitation code: ${args.code}\nJoin: ${args.joinUrl}\n\nExpires in 72 hours.`,
   }),
 
-  teamComplete: (args: { teamName: string; nextStep: string }) => ({
-    subject: `Team "${args.teamName}" is complete`,
+  welcomeTeamLead: (args: { name: string; loginUrl: string }) => ({
+    subject: `Welcome to the 2026 Supply Chain Analytics Competition`,
     html: wrap(`
-      <p>Your team <strong>${escapeHtml(args.teamName)}</strong> is now complete with 2 members.</p>
-      <p><strong>Next step:</strong> ${escapeHtml(args.nextStep)}</p>
+      <p>Welcome to the 2026 Supply Chain Analytics Competition, presented by Horizon Hobby!</p>
+      <p>Hi ${escapeHtml(args.name)}, your account is verified and your team has been created. Here's what to do next:</p>
+      <ol>
+        <li>Log in to your dashboard and invite your teammate using their @illinois.edu email</li>
+        <li>Once your teammate joins, both members should sign the NDA from the dashboard</li>
+        <li>We will send a notification when the competition data is available for download</li>
+      </ol>
+      <p><a href="${args.loginUrl}" style="display:inline-block; margin-top:8px; padding: 12px 24px; background:#E31837; color:#fff; text-decoration:none; border-radius:6px; font-weight:600;">Go to dashboard</a></p>
+      <p>If you have any questions, reply to this email or contact uiucbadm576@gmail.com.</p>
     `),
-    text: `Team "${args.teamName}" is now complete.\n\nNext step: ${args.nextStep}`,
+    text: `Welcome to the 2026 Supply Chain Analytics Competition, presented by Horizon Hobby!\n\nHi ${args.name}, your account is verified and your team has been created.\n\nNext steps:\n1. Log in to your dashboard and invite your teammate using their @illinois.edu email\n2. Once your teammate joins, both members should sign the NDA from the dashboard\n3. We will send a notification when the competition data is available for download\n\nDashboard: ${args.loginUrl}\n\nQuestions? Contact uiucbadm576@gmail.com`,
+  }),
+
+  welcomeTeamMember: (args: { name: string; teamName: string; loginUrl: string }) => ({
+    subject: `Welcome to the 2026 Supply Chain Analytics Competition`,
+    html: wrap(`
+      <p>Welcome to the 2026 Supply Chain Analytics Competition, presented by Horizon Hobby!</p>
+      <p>Hi ${escapeHtml(args.name)}, your account is verified and you've joined team <strong>${escapeHtml(args.teamName)}</strong>. Here's what to do next:</p>
+      <ol>
+        <li>Sign the NDA from your dashboard if you haven't already</li>
+        <li>We will send a notification when the competition data is available for download</li>
+      </ol>
+      <p><a href="${args.loginUrl}" style="display:inline-block; margin-top:8px; padding: 12px 24px; background:#E31837; color:#fff; text-decoration:none; border-radius:6px; font-weight:600;">Go to dashboard</a></p>
+      <p>If you have any questions, reply to this email or contact uiucbadm576@gmail.com.</p>
+    `),
+    text: `Welcome to the 2026 Supply Chain Analytics Competition, presented by Horizon Hobby!\n\nHi ${args.name}, your account is verified and you've joined team "${args.teamName}".\n\nNext steps:\n1. Sign the NDA from your dashboard if you haven't already\n2. We will send a notification when the competition data is available for download\n\nDashboard: ${args.loginUrl}\n\nQuestions? Contact uiucbadm576@gmail.com`,
+  }),
+
+  teamComplete: (args: { teamName: string; loginUrl: string }) => ({
+    subject: `Team "${args.teamName}" is now complete`,
+    html: wrap(`
+      <p>Great news! Your team <strong>${escapeHtml(args.teamName)}</strong> is now complete with 2 members.</p>
+      <p>Next steps:</p>
+      <ol>
+        <li>Both members should sign the NDA from the dashboard if you haven't already</li>
+        <li>We will send a notification when the competition data is available for download</li>
+      </ol>
+      <p><a href="${args.loginUrl}" style="display:inline-block; margin-top:8px; padding: 12px 24px; background:#E31837; color:#fff; text-decoration:none; border-radius:6px; font-weight:600;">Go to dashboard</a></p>
+    `),
+    text: `Great news! Your team "${args.teamName}" is now complete with 2 members.\n\nNext steps:\n1. Both members should sign the NDA from the dashboard if you haven't already\n2. We will send a notification when the competition data is available for download\n\nDashboard: ${args.loginUrl}`,
   }),
 
   ndaConfirmed: (args: { teamName: string }) => ({

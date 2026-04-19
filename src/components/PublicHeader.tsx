@@ -25,6 +25,9 @@ export async function PublicHeader() {
           <Link href="/announcements" className="text-neutral-700 hover:text-neutral-900">
             Announcements
           </Link>
+          <Link href="/contact" className="text-neutral-700 hover:text-neutral-900">
+            Contact
+          </Link>
           {loggedIn ? (
             <>
               <Link
@@ -103,9 +106,8 @@ export function PublicFooter() {
           <div>
             <div className="font-semibold text-neutral-900">Questions?</div>
             <p className="mt-2">
-              Contact the competition organizers at{" "}
-              <a href="mailto:uiucbadm576@gmail.com" className="underline">
-                uiucbadm576@gmail.com
+              <a href="/contact" className="inline-block rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800">
+                Contact us
               </a>
             </p>
           </div>

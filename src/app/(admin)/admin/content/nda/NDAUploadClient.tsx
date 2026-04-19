@@ -25,7 +25,7 @@ export function NDAUploadClient({ files }: { files: FileRow[] }) {
         <h2 className="font-semibold mb-4">Upload / replace NDA PDF</h2>
         <FormError message={state.error} />
         <FormNotice message={state.notice} />
-        <form action={formAction} className="mt-3 space-y-3">
+        <form action={formAction} className="mt-3 space-y-3" encType="multipart/form-data">
           <input
             name="file"
             type="file"
