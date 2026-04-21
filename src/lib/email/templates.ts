@@ -28,15 +28,16 @@ export const emailTemplates = {
     text: `Hi ${args.name},\n\nYour verification code is: ${args.code}\n\nThis code expires in 15 minutes.`,
   }),
 
-  passwordResetCode: (args: { code: string; name: string }) => ({
+  passwordResetCode: (args: { code: string; name: string; resetUrl: string }) => ({
     subject: `Password reset code: ${args.code}`,
     html: wrap(`
       <p>Hi ${escapeHtml(args.name)},</p>
       <p>You requested a password reset. Use this 6-digit code on the reset page:</p>
       <p style="font-size: 28px; letter-spacing: 6px; font-weight: 700; background:#f4f4f4; padding: 12px 18px; display:inline-block; border-radius: 6px;">${args.code}</p>
-      <p>If you didn't request this, you can ignore this email. Your password will not change.</p>
+      <p><a href="${args.resetUrl}" style="display:inline-block; margin-top:8px; padding: 12px 24px; background:#E31837; color:#fff; text-decoration:none; border-radius:6px; font-weight:600;">Reset your password</a></p>
+      <p style="font-size:13px; color:#555;">This code expires in 15 minutes. If you didn't request this, you can ignore this email — your password will not change.</p>
     `),
-    text: `Hi ${args.name},\n\nPassword reset code: ${args.code}\n\nIgnore this email if you didn't request a reset.`,
+    text: `Hi ${args.name},\n\nPassword reset code: ${args.code}\nReset link: ${args.resetUrl}\n\nThis code expires in 15 minutes. Ignore this email if you didn't request a reset.`,
   }),
 
   teamInvitation: (args: {
