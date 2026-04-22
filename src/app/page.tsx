@@ -167,6 +167,49 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How you're judged */}
+      <section id="judging" className="max-w-6xl mx-auto px-6 py-20">
+        <h2 className="text-3xl font-bold tracking-tight">How you&rsquo;re judged</h2>
+        <p className="mt-3 text-neutral-700 max-w-3xl">
+          The three finalists who present to Horizon Hobby are selected by a panel
+          weighing all of the following. Topping the leaderboard alone will{" "}
+          <em>not</em> guarantee a finalist slot.
+        </p>
+        <div className="mt-10 grid md:grid-cols-3 gap-6">
+          {[
+            {
+              n: "01",
+              t: "Forecast accuracy",
+              d: "Your wMAPE rank on the public leaderboard &mdash; weighted MAPE on the three held-out Old SKU parts, 50/50 yearly + monthly. Lower is better; 0% = perfect forecast. Because actuals for the held-out parts are hidden, your leaderboard score is effectively a clean validation signal you can use to iterate.",
+            },
+            {
+              n: "02",
+              t: "Methodology & rationale",
+              d: "Clarity of approach, data-use choices, assumptions, validation, and diagnostics &mdash; as evidenced by your PDF methodology and code submission.",
+            },
+            {
+              n: "03",
+              t: "Business insight for new SKUs",
+              d: "How your forecasts would inform inventory and launch planning for the Dirt Late Model parts. New-SKU predictions are not scored on the leaderboard, but Horizon Hobby reviews them directly &mdash; this is the business deliverable.",
+            },
+          ].map((s) => (
+            <div key={s.n} className="rounded-lg border border-neutral-200 bg-white p-6">
+              <div className="text-3xl font-bold text-red-700">{s.n}</div>
+              <div className="mt-3 font-semibold">{s.t}</div>
+              <p
+                className="mt-2 text-sm text-neutral-700 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: s.d }}
+              />
+            </div>
+          ))}
+        </div>
+        <p className="mt-8 text-sm text-neutral-600 max-w-3xl">
+          Invest in all four submission components (prediction file, code, methodology PDF,
+          presentation). A strong write-up with modest accuracy can beat a top-accuracy
+          submission with weak analysis.
+        </p>
+      </section>
+
       {/* Timeline */}
       <section id="timeline" className="max-w-6xl mx-auto px-6 py-20">
         <h2 className="text-3xl font-bold tracking-tight">Timeline</h2>
