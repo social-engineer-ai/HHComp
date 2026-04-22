@@ -65,6 +65,7 @@ venv/
 uploads/
 tmp/
 pgdata/
+backups/
 .docker-volumes/
 *.sqlite
 *.db

@@ -30,8 +30,16 @@ else
     ./ "ubuntu@$HOST:$REMOTE_DIR/"
 fi
 
-# Copy the .env separately (it may be in .gitignore/.dockerignore but is needed by docker-compose)
-scp -i "$KEY" -o StrictHostKeyChecking=no ./.env "ubuntu@$HOST:$REMOTE_DIR/.env"
+# Production .env is managed on the server — NEVER overwrite it from a developer
+# laptop. A missing / wrong .env on prod is the kind of outage that takes the site
+# down and wipes pgdata credentials (see incident 2026-04-22). If you genuinely
+# need to push a local .env (first-time bootstrap, not an update), run this
+# explicitly from the command line:
+#     SYNC_ENV=1 bash deploy/deploy.sh
+if [[ "${SYNC_ENV:-0}" == "1" ]]; then
+  echo "==> SYNC_ENV=1: pushing local .env to $HOST (confirm you meant this)"
+  scp -i "$KEY" -o StrictHostKeyChecking=no ./.env "ubuntu@$HOST:$REMOTE_DIR/.env"
+fi
 
 # Build, migrate, and start
 ssh -i "$KEY" -o StrictHostKeyChecking=no "ubuntu@$HOST" "
@@ -40,8 +48,8 @@ ssh -i "$KEY" -o StrictHostKeyChecking=no "ubuntu@$HOST" "
   docker compose build app
   docker compose up -d postgres
   sleep 5
-  docker compose run --rm app npx prisma migrate deploy
-  docker compose run --rm app npx prisma db seed || true
+  docker compose run --rm app npx prisma@6.19.3 migrate deploy
+  docker compose run --rm app npx prisma@6.19.3 db seed || true
   docker compose up -d app caddy
   docker compose ps
 "
