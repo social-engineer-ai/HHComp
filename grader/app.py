@@ -153,7 +153,7 @@ def grade(req: GradeRequest):
 
         try:
             proc = subprocess.run(
-                [sys.executable, str(script_path), str(pred_path), str(actual_path)],
+                [sys.executable, str(script_path), str(pred_path), str(actual_path), "--json"],
                 capture_output=True,
                 text=True,
                 timeout=TIMEOUT_SECONDS,
