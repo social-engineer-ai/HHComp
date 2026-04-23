@@ -48,7 +48,12 @@ ssh -i "$KEY" -o StrictHostKeyChecking=no "ubuntu@$HOST" "
   docker compose build app
   docker compose up -d postgres
   sleep 5
-  docker compose run --rm app npx prisma@6.19.3 migrate deploy
+  # Schema is managed via 'prisma db push' against a pre-existing DB, so
+  # 'migrate deploy' always fails with P3005 on this project. Kept for the
+  # day we switch to proper migrations; '|| true' so the rest of the deploy
+  # still runs. See incident 2026-04-22 for the half-complete deploy that
+  # happened when this line hard-failed.
+  docker compose run --rm app npx prisma@6.19.3 migrate deploy || true
   docker compose run --rm app npx prisma@6.19.3 db seed || true
   docker compose up -d app caddy
   docker compose ps
