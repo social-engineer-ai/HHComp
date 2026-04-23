@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
+import { formatDateCT } from "@/lib/time";
 import { logoutAction } from "../logout/actions";
 
 export const dynamic = "force-dynamic";
@@ -24,13 +25,17 @@ export default async function LeaderboardPage() {
   }
 
   const frozen = settings?.leaderboardVisibility === "FROZEN";
+  // Exclude internal "Test Team *" fixtures — they're only used for
+  // end-to-end admin testing and should never appear on the student leaderboard.
+  const excludeTestTeams = { team: { name: { not: { startsWith: "Test Team" } } } };
   let scores = await prisma.score.findMany({
+    where: excludeTestTeams,
     orderBy: { scoreValue: "asc" }, // lower wMAPE is better
     include: { team: true, submission: true },
     take: settings?.leaderboardTopN ?? undefined,
   });
   const finalists = await prisma.team.findMany({
-    where: { isFinalist: true },
+    where: { isFinalist: true, name: { not: { startsWith: "Test Team" } } },
     include: { score: true },
     orderBy: { name: "asc" },
   });
@@ -125,7 +130,7 @@ export default async function LeaderboardPage() {
                       {s.scoreValue.toFixed(4)}
                     </td>
                     <td className="px-4 py-3 text-neutral-500 text-xs">
-                      {new Date(s.submission.uploadedAt).toLocaleString()}
+                      {formatDateCT(s.submission.uploadedAt)}
                       {s.submission.isLate && (
                         <span className="ml-1 text-xs font-medium px-1.5 py-0.5 rounded-full bg-red-100 text-red-800">
                           LATE

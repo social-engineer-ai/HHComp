@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { FormError, FormNotice } from "@/components/FormError";
+import { formatDateCT } from "@/lib/time";
 import {
   setLeaderboardVisibilityAction,
   rescoreAllAction,
@@ -119,7 +120,7 @@ export function LeaderboardAdminClient({
                   </td>
                   <td className="px-4 py-2 text-right font-mono">{s.scoreValue.toFixed(4)}</td>
                   <td className="px-4 py-2 text-neutral-500 text-xs">
-                    {new Date(s.scoredAt).toLocaleString()}
+                    {formatDateCT(s.scoredAt)}
                   </td>
                   <td className="px-4 py-2">
                     <form action={overrideAction} className="flex gap-1">
@@ -251,7 +252,7 @@ export function LeaderboardAdminClient({
                     </span>
                   </td>
                   <td className="px-4 py-2 text-neutral-500 text-xs">
-                    {new Date(j.createdAt).toLocaleString()}
+                    {formatDateCT(j.createdAt)}
                   </td>
                   <td className="px-4 py-2 text-xs text-red-700 truncate max-w-xs">
                     {j.errorMessage ?? ""}
