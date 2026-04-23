@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireUser, getTeamForUser } from "@/lib/auth/guards";
 import { getNDAStatusForUser } from "@/lib/nda";
@@ -9,6 +10,7 @@ import { validatePredictionFile } from "@/lib/validation/prediction-file";
 import { getDeadlineInfo, isLate } from "@/lib/time";
 import { sendEmail } from "@/lib/email/client";
 import { emailTemplates } from "@/lib/email/templates";
+import { processGradingJob } from "@/lib/grading/process";
 import type { SubmissionComponent } from "@prisma/client";
 
 export type SubmitState = { error?: string; notice?: string };
@@ -203,11 +205,16 @@ export async function uploadSubmissionAction(
     }
   }
 
-  // For prediction submissions with VALID structure, enqueue a grading job
+  // For prediction submissions with VALID structure, enqueue and fire a grading
+  // job. `after()` runs processGradingJob *after* this action responds, so the
+  // user sees the upload confirmation immediately and the score lands on the
+  // leaderboard ~5–15s later. If the process dies before `after()` completes,
+  // the minute-ly safety-net cron picks up the still-QUEUED job.
   if (component === "PREDICTION" && validationStatus === "VALID") {
-    await prisma.gradingJob.create({
+    const job = await prisma.gradingJob.create({
       data: { submissionId: submission.id, status: "QUEUED" },
     });
+    after(() => processGradingJob(job.id));
   }
 
   revalidatePath("/submit");

@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { callGrader } from "@/lib/grading/client";
-import { sendEmail } from "@/lib/email/client";
-import { emailTemplates } from "@/lib/email/templates";
+import { processGradingJob } from "@/lib/grading/process";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Invoked by a cron (or manual admin trigger) to process queued grading jobs.
- * Processes up to MAX_BATCH jobs per invocation.
+ * Safety-net cron: sweep any QUEUED grading jobs that the inline `after()`
+ * path (triggered from the submit action) didn't pick up. Under normal flow
+ * the queue stays empty; this catches the edge cases (server restart mid-run,
+ * transient grader failure, historical backlog).
  */
 const MAX_BATCH = 5;
 
@@ -23,142 +23,24 @@ export async function POST(req: NextRequest) {
     where: { status: "QUEUED" },
     orderBy: { createdAt: "asc" },
     take: MAX_BATCH,
-    include: {
-      submission: { include: { team: { include: { members: { include: { user: true } } } } } },
-    },
+    select: { id: true },
   });
 
   const results: Array<{ jobId: string; ok: boolean; error?: string }> = [];
-
-  for (const job of jobs) {
-    await prisma.gradingJob.update({
-      where: { id: job.id },
-      data: { status: "RUNNING", startedAt: new Date() },
-    });
-
+  for (const j of jobs) {
     try {
-      const settings = await prisma.competitionSettings.findUnique({ where: { id: 1 } });
-      if (!settings?.activeAnswerKeyId) {
-        throw new Error("No active answer key configured.");
-      }
-      const answerKey = await prisma.dataFile.findUnique({
-        where: { id: settings.activeAnswerKeyId },
+      await processGradingJob(j.id);
+      const final = await prisma.gradingJob.findUnique({
+        where: { id: j.id },
+        select: { status: true, errorMessage: true },
       });
-      if (!answerKey) throw new Error("Answer key not found.");
-
-      const script = settings.activeGradingScriptId
-        ? await prisma.dataFile.findUnique({
-            where: { id: settings.activeGradingScriptId },
-          })
-        : null;
-
-      const resp = await callGrader({
-        submissionS3Key: job.submission.s3Key,
-        answerKeyS3Key: answerKey.s3Key,
-        scriptS3Key: script?.s3Key ?? null,
+      results.push({
+        jobId: j.id,
+        ok: final?.status === "SUCCESS",
+        error: final?.status === "ERROR" ? final.errorMessage ?? undefined : undefined,
       });
-
-      if (!resp.ok || typeof resp.score !== "number" || Number.isNaN(resp.score)) {
-        await prisma.gradingJob.update({
-          where: { id: job.id },
-          data: {
-            status: "ERROR",
-            finishedAt: new Date(),
-            stdout: resp.stdout ?? null,
-            stderr: resp.stderr ?? null,
-            exitCode: resp.exit_code ?? null,
-            errorMessage: resp.error ?? "Unknown grader error",
-          },
-        });
-        // Email the team
-        try {
-          const recipients = job.submission.team.members.map((m) => m.user.email);
-          await sendEmail({
-            to: recipients,
-            ...emailTemplates.scoringError({
-              teamName: job.submission.team.name,
-              message: resp.error ?? "Unknown grader error",
-            }),
-          });
-        } catch { /* ignore */ }
-        results.push({ jobId: job.id, ok: false, error: resp.error });
-        continue;
-      }
-
-      // Upsert score (one per team, always pointing at latest)
-      await prisma.$transaction(async (tx) => {
-        await tx.gradingJob.update({
-          where: { id: job.id },
-          data: {
-            status: "SUCCESS",
-            finishedAt: new Date(),
-            stdout: resp.stdout ?? null,
-            stderr: resp.stderr ?? null,
-            exitCode: resp.exit_code ?? null,
-            scriptVersionHash: script?.sha256 ?? null,
-            answerKeyHash: answerKey.sha256,
-          },
-        });
-
-        const existing = await tx.score.findUnique({
-          where: { teamId: job.submission.teamId },
-        });
-        if (existing) {
-          await tx.score.update({
-            where: { teamId: job.submission.teamId },
-            data: {
-              submissionId: job.submissionId,
-              gradingJobId: job.id,
-              scoreValue: resp.score!,
-              scoredAt: new Date(),
-              scriptVersionHash: script?.sha256 ?? null,
-              isManualOverride: false,
-              overrideReason: null,
-            },
-          });
-        } else {
-          await tx.score.create({
-            data: {
-              teamId: job.submission.teamId,
-              submissionId: job.submissionId,
-              gradingJobId: job.id,
-              scoreValue: resp.score!,
-              scriptVersionHash: script?.sha256 ?? null,
-            },
-          });
-        }
-      });
-
-      // Email the team with score
-      try {
-        const recipients = job.submission.team.members.map((m) => m.user.email);
-        // Compute current rank
-        const rank =
-          (await prisma.score.count({
-            where: { scoreValue: { lt: resp.score } },
-          })) + 1;
-        await sendEmail({
-          to: recipients,
-          ...emailTemplates.scoreRecorded({
-            teamName: job.submission.team.name,
-            score: resp.score,
-            rank,
-          }),
-        });
-      } catch { /* ignore */ }
-
-      results.push({ jobId: job.id, ok: true });
     } catch (e) {
-      const msg = (e as Error).message;
-      await prisma.gradingJob.update({
-        where: { id: job.id },
-        data: {
-          status: "ERROR",
-          finishedAt: new Date(),
-          errorMessage: msg,
-        },
-      });
-      results.push({ jobId: job.id, ok: false, error: msg });
+      results.push({ jobId: j.id, ok: false, error: (e as Error).message });
     }
   }
 
@@ -166,6 +48,5 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  // Allow GET for cron-friendly invocation
   return POST(req);
 }
